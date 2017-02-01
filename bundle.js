@@ -78,6 +78,7 @@ var mCache = {};
 
 function Node(element) {
   this.element = element;
+  element[NODE_INSTANCE] = this;
 }
 Node.addMethod = function (name, method) {
   Node.prototype[name] = method;
@@ -143,11 +144,10 @@ each({
 });
 var Y = {
   one: function (element) {
-    if (element.element && element.getDOMNode) return element; // already a Node instance
     if (!element) return;
+    if (element.element && element.getDOMNode) return element; // already a Node instance
     if (element[NODE_INSTANCE]) return element[NODE_INSTANCE];
-    element[NODE_INSTANCE] = new Node(element);
-    return element[NODE_INSTANCE];
+    return new Node(element);
   },
   all: function (array) {
     // should deal with array-like
@@ -710,7 +710,8 @@ var matthew = {
     },
     getScope: function (element) {
       return Y.one(element || document.body).getScope();
-    }
+    },
+    Y: Y
 };
 
 // init root scope for document.body
