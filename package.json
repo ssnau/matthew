@@ -4,10 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "prepublish": "browserify index.js > bundle.js  && browserify index.js | uglifyjs> bundle.js ",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "browser": "./index.js",
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "browser": "./bundle.min.js",
+  "keywords": ["binding"],
+  "author": "ssnau",
+  "license": "ISC",
+  "devDependencies": {
+    "browserify": "^14.0.0",
+    "uglify-js": "^2.7.5"
+  }
 }
