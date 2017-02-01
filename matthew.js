@@ -6,6 +6,26 @@ var NODE_INSTANCE = '__M_NODE_INSTANCE';
 var eachId = 0;
 var mCache = {};
 
+var isEventSupported = (function(){
+  var TAGNAMES = {
+    'select':'input','change':'input', 'input': 'input',
+    'submit':'form','reset':'form',
+    'error':'img','load':'img','abort':'img'
+  }
+  function isEventSupported(eventName) {
+    var el = document.createElement(TAGNAMES[eventName] || 'div');
+    eventName = 'on' + eventName;
+    var isSupported = (eventName in el);
+    if (!isSupported) {
+      el.setAttribute(eventName, 'return;');
+      isSupported = typeof el[eventName] == 'function';
+    }
+    el = null;
+    return isSupported;
+  }
+  return isEventSupported;
+})();
+
 function Node(element) {
   this.element = element;
   element[NODE_INSTANCE] = this;
@@ -21,6 +41,7 @@ Node.create = function (str) {
 
 each({
   set: function (name, val) {
+    if (name == 'value' || name == 'checked') this.element[name] = val;
     this.setAttribute(name, val);
   },
   get: function (name) {
@@ -29,6 +50,35 @@ each({
       return Y.all(ret);
     }
     return ret;
+  },
+  on: function (name, callback) {
+    var elem = this.element;
+    var ie = !!elem.attachEvent;
+    var events = [];
+    switch (name) {
+      case 'valuechange':
+       events = isEventSupported('input') ? ['input', 'paste'] : ['keyup', 'paste'];
+      break;
+      default:
+        events = [name];
+    }
+
+    each(events, function (event) {
+      if (ie) { 
+        elem.attachEvent('on' + event, callback)
+      } else {
+        elem.addEventListener(event, callback)
+      }
+    });
+    return function () {
+      each(events, function (event) {
+        if (ie) { 
+          elem.detachEvent('on' + event, callback)
+        } else {
+          elem.removeEventListener(event, callback)
+        }
+      })
+    }
   },
   next: function () {
     return Y.one(this.element.nextElementSibling || this.element.nextSibling);
