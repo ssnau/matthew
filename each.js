@@ -1,3 +1,4 @@
+function isArray(a) { return !!a && a.indexOf && a.slice && a.splice; }
 function each(array, fn) {
   if (isArray(array)) {
     for (var i = 0; i < array.length; i++) fn(array[i], i);

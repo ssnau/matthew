@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "prepublish": "browserify index.js > bundle.js  && browserify index.js | uglifyjs> bundle.js ",
+    "prepublish": "browserify matthew.js > bundle.js && browserify matthew.js | uglifyjs > bundle.min.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "browser": "./bundle.min.js",

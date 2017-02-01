@@ -99,6 +99,7 @@ function htmlEscape(unsafe) {
 		.replace(/'/g, "&#039;");
 }
 var ie = (function(){
+  try {
     var undef,
         v = 3,
         div = document.createElement('div'),
@@ -108,6 +109,9 @@ var ie = (function(){
         all[0]
     );
     return v > 4 ? v : undef;
+  } catch (e) {
+    return 0;
+  }
 }());
 
 /**
@@ -737,4 +741,3 @@ function traverse(root, callback) {
 
 if (typeof window !== 'undefine') window.matthew = matthew;
 module.exports = matthew;
-
