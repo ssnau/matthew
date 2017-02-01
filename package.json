@@ -1,6 +1,6 @@
 {
   "name": "matthew",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -8,7 +8,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "browser": "./bundle.min.js",
-  "keywords": ["binding"],
+  "keywords": [
+    "binding"
+  ],
   "author": "ssnau",
   "license": "ISC",
   "devDependencies": {
