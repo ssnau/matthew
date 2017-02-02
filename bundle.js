@@ -69,6 +69,7 @@ module.exports = each;
 
 },{}],3:[function(require,module,exports){
 var Scope = require('./scope');
+var Validator = require('./validator');
 var parser = require('./ng-parse');
 var each = require('./each');
 var SCOPE_ATTR = "m-scope";
@@ -108,6 +109,9 @@ Node.create = function (str) {
   var div = document.createElement('div');
   div.innerHTML = str;
   return new Node(div.firstChild);
+}
+Node.isNode = function (node) {
+  return node instanceof Node;
 }
 
 function addEvent(evnt, elem, func) {
@@ -159,6 +163,26 @@ each({
   },
   next: function () {
     return Y.one(this.element.nextElementSibling || this.element.nextSibling);
+  },
+  contains: function (node) {
+    var elem = Y.one(node).element;
+    var target = this.element;
+    while (elem) {
+      if (elem == target) return true;
+      elem = elem.parentNode;
+    }
+    return false;
+  },
+  addClass: function (name) {
+    var n = this.element;
+    var classes = n.className.split(/\s+/).filter(Boolean);
+    if (classes.some(function (c) { c == name })) return;
+    n.className = classes.concat(name).join(' ');
+  },
+  removeClass: function (name) {
+    var n = this.element;
+    var classes = n.className.split(/\s+/);
+    n.className = classes.filter(function(x) { x != name; }).join(' ');
   },
   // MAY BE BUGGY
   show: function () {
@@ -532,7 +556,7 @@ var binders = {
      *     // 设置可设置其它东西
      *     // do something here...
      *
-     *     // 遵循mt-validator规范
+     *     // 遵循m-validator规范
      *     // 1. 返回true/false, true代表通过
      *     // 2. 返回 {value: boolean, msg: string}，value的值代表是否通过,msg为成功|错误信息
      *     return valid;
@@ -558,9 +582,9 @@ var binders = {
             scope.$this = node;
             var valid = node.scopeEval(validation);
             scope.$this = null;
-            node.removeClass('mt-validate-valid');
-            node.removeClass('mt-validate-invalid');
-            node.addClass((valid === true || (valid && valid.value === true)) ? "mt-validate-valid" : "mt-validate-invalid");
+            node.removeClass('m-validate-valid');
+            node.removeClass('m-validate-invalid');
+            node.addClass((valid === true || (valid && valid.value === true)) ? "m-validate-valid" : "m-validate-invalid");
             scope.$apply();
             return valid;
         };
@@ -570,8 +594,9 @@ var binders = {
         // bind to validator
         var ndForm = node.ancestor('form');
         if (ndForm) {
-            var validator = Y.mt.validator.getInstance(ndForm);
-            validator.register(config.group, validate);
+            Validator
+              .getInstance(ndForm)
+              .register(config.group, validate);
         }
 
         // bind to events
@@ -791,10 +816,8 @@ function getScope() {
 Node.addMethod('getScope', getScope);
 Node.addMethod('scope', getScope);
 // for debug reason
-Node.addMethod('scopeEval', function (element, expr) {
-    var node = Y.one(element);
-    var scope = node.getScope();
-    return scope.$eval(wrapExpr(expr, node));
+Node.addMethod('scopeEval', function (expr) {
+  return this.getScope().$eval(wrapExpr(expr, this));
 });
 
 /**
@@ -871,7 +894,7 @@ function traverse(root, callback) {
 if (typeof window !== 'undefine') window.matthew = matthew;
 module.exports = matthew;
 
-},{"./each":2,"./ng-parse":4,"./scope":5}],4:[function(require,module,exports){
+},{"./each":2,"./ng-parse":4,"./scope":5,"./validator":6}],4:[function(require,module,exports){
 var NODE_TYPE_ELEMENT = 1;
 var NODE_TYPE_TEXT = 3;
 var NODE_TYPE_COMMENT = 8;
@@ -2570,4 +2593,96 @@ Scope.prototype = {
 
 module.exports = Scope;
 
-},{"./clone":1,"./each":2,"./ng-parse":4}]},{},[3]);
+},{"./clone":1,"./each":2,"./ng-parse":4}],6:[function(require,module,exports){
+function Validator() {
+	this._validations = [];
+	this._status = {};
+}
+
+Validator.prototype = {
+	constructor: Validator,
+	/**
+	 *
+	 * @param {Object|String} group
+	 * @param {Function} fn
+	 * @return {Function} 
+	 */
+	register: function (group, fn) {
+		if (typeof group === "function") {
+			fn = group;
+		}
+
+		this._validations.push({
+			group: group,
+			validateFn: fn
+		});
+
+		var me = this;
+		return function() {
+			me.unregister(group, fn);
+		};
+	},
+	/**
+	 * @param group
+	 * @param fn
+	 */
+	unregister: function (group, fn) {
+		this._validations = this._validations.filter(function(tuple) {
+		 return !(tuple.group === group &&  tuple.validateFn === fn);
+		});
+	},
+	validate: function (fn) {
+		var me = this;
+		return this._validations.filter(fn || Boolean).every(function(tuple) {
+			var res = tuple.validateFn();
+			res = (typeof res === 'object') ? res : {value: res};
+			me._status = {
+				group: tuple.group,
+				value: res.value,
+				msg: res.msg
+			};
+			return me._status.value;
+		});
+	},
+	getStatus: function () {
+		return this._status;
+	}
+};
+
+/**
+* ArrayOf({
+*   node: HTMLElement|String,
+*   instance: instanceOf(Validator)
+* })
+* @type {Array}
+*/
+var instances = [];
+
+Validator.getInstance = function(form) {
+	var node = form._node || form.element || form;
+
+	if (!node) {
+		throw new Error("please pass a [form instance] or [string] to validator.getInstance..");
+	}
+
+	// find if exist
+	var filtered = instances.filter(function(tuple) {
+		return tuple.node === node;
+	});
+
+	if (filtered[0]) return filtered[0].instance;
+
+	var instance = new Validator();
+	instances.push({
+		node: node,
+		instance: instance
+	});
+
+	return instance;
+};
+
+Validator._instances = instances;
+
+module.exports = Validator;
+
+},{}]},{},[3]);
