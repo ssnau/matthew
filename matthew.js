@@ -1,4 +1,5 @@
 var Scope = require('./scope');
+var Validator = require('./validator');
 var parser = require('./ng-parse');
 var each = require('./each');
 var SCOPE_ATTR = "m-scope";
@@ -38,6 +39,9 @@ Node.create = function (str) {
   var div = document.createElement('div');
   div.innerHTML = str;
   return new Node(div.firstChild);
+}
+Node.isNode = function (node) {
+  return node instanceof Node;
 }
 
 function addEvent(evnt, elem, func) {
@@ -89,6 +93,26 @@ each({
   },
   next: function () {
     return Y.one(this.element.nextElementSibling || this.element.nextSibling);
+  },
+  contains: function (node) {
+    var elem = Y.one(node).element;
+    var target = this.element;
+    while (elem) {
+      if (elem == target) return true;
+      elem = elem.parentNode;
+    }
+    return false;
+  },
+  addClass: function (name) {
+    var n = this.element;
+    var classes = n.className.split(/\s+/).filter(Boolean);
+    if (classes.some(function (c) { c == name })) return;
+    n.className = classes.concat(name).join(' ');
+  },
+  removeClass: function (name) {
+    var n = this.element;
+    var classes = n.className.split(/\s+/);
+    n.className = classes.filter(function(x) { x != name; }).join(' ');
   },
   // MAY BE BUGGY
   show: function () {
@@ -462,7 +486,7 @@ var binders = {
      *     // 设置可设置其它东西
      *     // do something here...
      *
-     *     // 遵循mt-validator规范
+     *     // 遵循m-validator规范
      *     // 1. 返回true/false, true代表通过
      *     // 2. 返回 {value: boolean, msg: string}，value的值代表是否通过,msg为成功|错误信息
      *     return valid;
@@ -488,9 +512,9 @@ var binders = {
             scope.$this = node;
             var valid = node.scopeEval(validation);
             scope.$this = null;
-            node.removeClass('mt-validate-valid');
-            node.removeClass('mt-validate-invalid');
-            node.addClass((valid === true || (valid && valid.value === true)) ? "mt-validate-valid" : "mt-validate-invalid");
+            node.removeClass('m-validate-valid');
+            node.removeClass('m-validate-invalid');
+            node.addClass((valid === true || (valid && valid.value === true)) ? "m-validate-valid" : "m-validate-invalid");
             scope.$apply();
             return valid;
         };
@@ -500,8 +524,9 @@ var binders = {
         // bind to validator
         var ndForm = node.ancestor('form');
         if (ndForm) {
-            var validator = Y.mt.validator.getInstance(ndForm);
-            validator.register(config.group, validate);
+            Validator
+              .getInstance(ndForm)
+              .register(config.group, validate);
         }
 
         // bind to events
@@ -721,10 +746,8 @@ function getScope() {
 Node.addMethod('getScope', getScope);
 Node.addMethod('scope', getScope);
 // for debug reason
-Node.addMethod('scopeEval', function (element, expr) {
-    var node = Y.one(element);
-    var scope = node.getScope();
-    return scope.$eval(wrapExpr(expr, node));
+Node.addMethod('scopeEval', function (expr) {
+  return this.getScope().$eval(wrapExpr(expr, this));
 });
 
 /**
