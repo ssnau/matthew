@@ -121,11 +121,13 @@ each({
   hide: function () {
     this.element.style.display = 'none';
   },
+  // NOT EVERY NODE HAS xxAttribute fn. 
+  // #html #document does not have.
   hasAttribute: function (name) {
-    return this.element.hasAttribute(name);
+    return this.element.hasAttribute && this.element.hasAttribute(name);
   },
   getAttribute: function (name) {
-    return this.element.getAttribute(name);
+    return this.element.getAttribute && this.element.getAttribute(name);
   },
   setAttribute: function (name, val) {
     return this.element.setAttribute(name, val);
@@ -727,19 +729,17 @@ var matthew = {
     Y: Y
 };
 
-// init root scope for document.body
-Y.one(document.body)._$scope = Scope.getRootInstance();
 
 function getScope() {
-    var node = this;
-    while (node) {
-        if (node.hasAttribute(SCOPE_ATTR) && !node._$scope) {
-            createScopeOnElement(node);
-        }
-        if (node._$scope) return node._$scope;
-        node = node.ancestor();
+  var node = this;
+  while (node) {
+    if (node.hasAttribute(SCOPE_ATTR) && !node._$scope) {
+      createScopeOnElement(node);
     }
-    return Scope.getRootInstance();
+    if (node._$scope) return node._$scope;
+    node = node.ancestor();
+  }
+  return Scope.getRootInstance();
 }
 
 // augment YUI node
@@ -825,7 +825,13 @@ if (typeof window !== 'undefine') window.matthew = matthew;
 !function() {
   var scripts = document.getElementsByTagName( 'script' );
   var me = scripts[ scripts.length - 1 ];
-  if (me.getAttribute('auto-init')) matthew.init(document.body);
+  setTimeout(function () {
+    if (me.getAttribute('auto-init')) matthew.init(document.body);
+  });
 }();
+setTimeout(function () {
+  // init root scope for document.body
+  Y.one(document.body)._$scope = Scope.getRootInstance();
+});
 
 module.exports = matthew;
