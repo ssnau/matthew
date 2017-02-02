@@ -4,7 +4,7 @@
   "description": "",
   "main": "matthew.js",
   "scripts": {
-    "prepublish": "browserify matthew.js > bundle.js && browserify matthew.js | uglifyjs > bundle.min.js",
+    "prepublish": "browserify matthew.js > bundle.js && browserify matthew.js | uglifyjs -c > bundle.min.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
