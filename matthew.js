@@ -822,4 +822,10 @@ function traverse(root, callback) {
 }
 
 if (typeof window !== 'undefine') window.matthew = matthew;
+!function() {
+  var scripts = document.getElementsByTagName( 'script' );
+  var me = scripts[ scripts.length - 1 ];
+  if (me.getAttribute('auto-init')) matthew.init(document.body);
+}();
+
 module.exports = matthew;

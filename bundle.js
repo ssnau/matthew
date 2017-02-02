@@ -892,6 +892,12 @@ function traverse(root, callback) {
 }
 
 if (typeof window !== 'undefine') window.matthew = matthew;
+!function() {
+  var scripts = document.getElementsByTagName( 'script' );
+  var me = scripts[ scripts.length - 1 ];
+  if (me.getAttribute('auto-init')) matthew.init(document.body);
+}();
+
 module.exports = matthew;
 
 },{"./each":2,"./ng-parse":4,"./scope":5,"./validator":6}],4:[function(require,module,exports){
