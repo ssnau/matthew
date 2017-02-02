@@ -96,6 +96,7 @@ var isEventSupported = (function(){
   return isEventSupported;
 })();
 
+
 function Node(element) {
   this.element = element;
   element[NODE_INSTANCE] = this;
@@ -109,12 +110,30 @@ Node.create = function (str) {
   return new Node(div.firstChild);
 }
 
+function addEvent(evnt, elem, func) {
+  if (elem.addEventListener) {  // W3C DOM
+    elem.addEventListener(evnt,func,false);
+  } else if (elem.attachEvent) { // IE DOM
+    elem.attachEvent("on"+evnt, func);
+  } else { // No much to do
+    elem[evnt] = func;
+  }
+}
+function removeEvent(event, elem, func) {
+  if (elem.removeEventListener) {  // W3C DOM
+    elem.addEventListener(evnt,func,false);
+  } else if (elem.detachEvent) { // IE DOM
+    elem.attachEvent("on"+evnt, func);
+  }
+}
+
 each({
   set: function (name, val) {
-    if (name == 'value' || name == 'checked') this.element[name] = val;
+    if (name == 'value' || name == 'checked' || name == 'className') this.element[name] = val;
     this.setAttribute(name, val);
   },
   get: function (name) {
+    if (name == 'value' || name == 'checked' || name == 'className') return this.element[name];
     var ret = this.element[name] || this.getAttribute(name); 
     if (name == 'children' && ret) {
       return Y.all(ret);
@@ -133,25 +152,20 @@ each({
         events = [name];
     }
 
-    each(events, function (event) {
-      if (ie) { 
-        elem.attachEvent('on' + event, callback)
-      } else {
-        elem.addEventListener(event, callback)
-      }
-    });
+    each(events, function (event) { addEvent(event, elem, callback); });
     return function () {
-      each(events, function (event) {
-        if (ie) { 
-          elem.detachEvent('on' + event, callback)
-        } else {
-          elem.removeEventListener(event, callback)
-        }
-      })
+      each(events, function (event) { removeEvent(event, elem, callback); })
     }
   },
   next: function () {
     return Y.one(this.element.nextElementSibling || this.element.nextSibling);
+  },
+  // MAY BE BUGGY
+  show: function () {
+    this.element.style.display = '';
+  },
+  hide: function () {
+    this.element.style.display = 'none';
   },
   hasAttribute: function (name) {
     return this.element.hasAttribute(name);
@@ -456,10 +470,10 @@ var binders = {
             });
             each(idMap, function(val, key) {
                 if (!newMap.hasOwnProperty(key)) {
-                    toBeDeleteIds[key] = true;
+                    toBeDeleteIds.push(key);
                 }
             });
-            each(toBeDeleteIds, function(val, key){
+            each(toBeDeleteIds, function(key){
                 idMap[key].scope.$destory();
                 idMap[key].node.remove(true);
                 delete idMap[key];
@@ -615,13 +629,7 @@ var binders = {
     }
 };
 
-// use m- as shortcut..
-each(binders, function (val, key) {
-    binders[key.replace('m-', 'm-')] = val;
-});
-
 var priorites = {
-    'm-repeat': 999,
     'm-repeat': 999,
     '*': 100
 };
