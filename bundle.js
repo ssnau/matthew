@@ -65,13 +65,15 @@ function each(array, fn) {
     }
   }
 }
+if (!Array.isArray) Array.isArray = isArray;
+if (!([].forEach)) Array.prototype.forEach = function (fn) { each(this, fn); }
 module.exports = each;
 
 },{}],3:[function(require,module,exports){
+var each = require('./each');
 var Scope = require('./scope');
 var Validator = require('./validator');
 var parser = require('./ng-parse');
-var each = require('./each');
 var SCOPE_ATTR = "m-scope";
 var NODE_INSTANCE = '__M_NODE_INSTANCE';
 var eachId = 0;
@@ -115,20 +117,10 @@ Node.isNode = function (node) {
 }
 
 function addEvent(evnt, elem, func) {
-  if (elem.addEventListener) {  // W3C DOM
-    elem.addEventListener(evnt,func,false);
-  } else if (elem.attachEvent) { // IE DOM
-    elem.attachEvent("on"+evnt, func);
-  } else { // No much to do
-    elem[evnt] = func;
-  }
+  elem.addEventListener(evnt,func,false);
 }
 function removeEvent(event, elem, func) {
-  if (elem.removeEventListener) {  // W3C DOM
-    elem.addEventListener(evnt,func,false);
-  } else if (elem.detachEvent) { // IE DOM
-    elem.attachEvent("on"+evnt, func);
-  }
+  elem.addEventListener(evnt,func,false);
 }
 
 each({
@@ -2297,7 +2289,7 @@ var clone = require('./clone');
 var each = require('./each');
 var noop = function () {};
 
-var isArray = function (a) { return !!a && a.indexOf && a.slice && a.splice; }
+var isArray = Array.isArray;
 var isDate = function (a) { return a && typeof a.getTime == 'function' && typeof a.getDate == 'function'; }
 var isRegExp = function (a) { return a instanceof RegExp; }
 var isFunction = function (a) { return typeof a === 'function'; }

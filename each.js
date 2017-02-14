@@ -10,4 +10,6 @@ function each(array, fn) {
     }
   }
 }
+if (!Array.isArray) Array.isArray = isArray;
+if (!([].forEach)) Array.prototype.forEach = function (fn) { each(this, fn); }
 module.exports = each;

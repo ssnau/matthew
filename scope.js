@@ -5,7 +5,7 @@ var clone = require('./clone');
 var each = require('./each');
 var noop = function () {};
 
-var isArray = function (a) { return !!a && a.indexOf && a.slice && a.splice; }
+var isArray = Array.isArray;
 var isDate = function (a) { return a && typeof a.getTime == 'function' && typeof a.getDate == 'function'; }
 var isRegExp = function (a) { return a instanceof RegExp; }
 var isFunction = function (a) { return typeof a === 'function'; }

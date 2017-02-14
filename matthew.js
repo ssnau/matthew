@@ -1,7 +1,7 @@
+var each = require('./each');
 var Scope = require('./scope');
 var Validator = require('./validator');
 var parser = require('./ng-parse');
-var each = require('./each');
 var SCOPE_ATTR = "m-scope";
 var NODE_INSTANCE = '__M_NODE_INSTANCE';
 var eachId = 0;
@@ -45,20 +45,10 @@ Node.isNode = function (node) {
 }
 
 function addEvent(evnt, elem, func) {
-  if (elem.addEventListener) {  // W3C DOM
-    elem.addEventListener(evnt,func,false);
-  } else if (elem.attachEvent) { // IE DOM
-    elem.attachEvent("on"+evnt, func);
-  } else { // No much to do
-    elem[evnt] = func;
-  }
+  elem.addEventListener(evnt,func,false);
 }
 function removeEvent(event, elem, func) {
-  if (elem.removeEventListener) {  // W3C DOM
-    elem.addEventListener(evnt,func,false);
-  } else if (elem.detachEvent) { // IE DOM
-    elem.attachEvent("on"+evnt, func);
-  }
+  elem.addEventListener(evnt,func,false);
 }
 
 each({
